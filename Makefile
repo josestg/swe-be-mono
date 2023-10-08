@@ -18,6 +18,13 @@ CMD_DIR ?= cmd
 # 'cmd/cmd-a' and 'cmd/cmd-b'. As a result, CMD_SET becomes 'bin/cmd-a bin/cmd-b'.
 CMD_SET ?= $(addprefix $(BIN_DIR)/, $(shell find $(CMD_DIR) -mindepth 1 -maxdepth 1 -type d -exec basename {} \;))
 
+# CURRENT_TIME is the current time in RFC3339 format.
+CURRENT_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+# BUILD_VERSION is the git tag of the current commit.
+BUILD_VERSION := $(shell git describe --tags --always --match "[0-9][0-9][0-9][0-9].*.*")
+
+
 .PHONY: build
 build: $(CMD_SET) # build all binaries in CMD_SET.
 	@echo "Build done. Binaries:"
@@ -36,4 +43,10 @@ clean:
 bin/%: $(shell find . -type f -name '*.go') # ensure to rebuild if any go file changed.
 	@echo "Building '$@'."
 	@mkdir -p $(dir $@) # create `bin` directory if not exist.
-	@go build -race -o $@ ./cmd/$(@F)
+	@go build \
+		-race \
+		-ldflags "\
+			-X main.buildName=$(@F) \
+			-X main.buildTime=$(CURRENT_TIME) \
+			-X main.buildVersion=$(BUILD_VERSION)" \
+		-o $@ ./cmd/$(@F)

@@ -23,6 +23,9 @@ jobs:
       - name: Display Go version
         run: go version
 
+      - name: Prepare Tooling
+        run: make tools
+
       - name: Build
         run: make build
 

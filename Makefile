@@ -41,6 +41,20 @@ clean:
 	@rm -rf $(BIN_DIR)
 	@echo "Clean done."
 
+.PHONY: lint
+lint: hack/go-lint.sh
+	@chmod +x hack/go-lint.sh
+	@echo "Running linter."
+	@hack/go-lint.sh
+	@echo "Linter done."
+
+.PHONY: test
+test: hack/go-unittest.sh
+	@chmod +x hack/go-unittest.sh
+	@echo "Running unit tests."
+	@hack/go-unittest.sh
+	@echo "Unit tests done."
+
 # The pattern rule bin/% builds binaries in the 'bin' directory.
 # It is used by the `make build` target.
 #
@@ -58,9 +72,9 @@ bin/%: $(shell find . -type f -name '*.go') # ensure to rebuild if any go file c
 
 
 # Install all development tools, these tools are used by pre-commit hook.
-tools: hack/install_tools.sh
+tools: hack/install-tools.sh
 	@echo "Installing tools"
-	@hack/install_tools.sh
+	@hack/install-tools.sh
 	@echo "Tools installed"
 
 

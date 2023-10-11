@@ -4,6 +4,9 @@
 # - [docs](https://www.gnu.org/software/make/manual/html_node/Choosing-the-Shell.html)
 SHELL =/bin/bash
 
+# Flag for enabling CGO, in development environment CGO should be enabled to enable -race flags.
+CGO_ENABLED ?= 1
+
 # BIN_DIR is the directory where built binaries will be placed.
 BIN_DIR ?= bin
 
@@ -46,7 +49,7 @@ bin/%: $(shell find . -type f -name '*.go') # ensure to rebuild if any go file c
 	@echo "Building '$@'."
 	@mkdir -p $(dir $@) # create `bin` directory if not exist.
 	@go build \
-		-race \
+		-race=$(CGO_ENABLED) \
 		-ldflags "\
 			-X main.buildName=$(@F) \
 			-X main.buildTime=$(CURRENT_TIME) \
@@ -66,3 +69,22 @@ setup-pre-commit:
 	@echo "Setting up pre-commit hook"
 	@cp -f hack/pre-commit.sh .git/hooks/pre-commit
 	@chmod +x .git/hooks/pre-commit
+
+
+images: $(addprefix docker-image/, $(CMD_SET))
+	@echo "All images built."
+
+# Build docker image.
+docker-image/%:
+	@echo "Building docker image: $(@F), please wait..."
+	@docker build \
+		-f cmd/admin-restful/Dockerfile \
+		-q \
+		-t josestg/swe-be-mono-$(@F):$(BUILD_VERSION) \
+		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
+		--build-arg BUILD_DATE=$(CURRENT_TIME) \
+		--build-arg IMAGE_NAME=josestg/swe-be-mono-$(@F) \
+		--build-arg GITHUB_TOKEN=$(GITHUB_TOKEN) \
+		--build-arg CACHEBUST=$(shell date +%s) \
+		. ;
+	@echo "Docker image built: josestg/swe-be-mono-$(@F):$(BUILD_VERSION)"

@@ -55,14 +55,14 @@ type Route struct {
 // The ServeMux only exposes 3 methods: Route, Handle, and ServeHTTP, which are more simple than the original.
 type ServeMux struct {
 	core *httprouter.Router
-	conf *Config
+	conf *MuxConfig
 	midl MuxMiddleware
 }
 
 // NewServeMux creates a new ServeMux with given options.
 // If no option is given, the Default option is applied.
-func NewServeMux(opts ...Option) *ServeMux {
-	mux := ServeMux{conf: &Config{
+func NewServeMux(opts ...MuxOption) *ServeMux {
+	mux := ServeMux{conf: &MuxConfig{
 		RedirectTrailingSlash:  true,
 		RedirectFixedPath:      true,
 		HandleMethodNotAllowed: true,
@@ -109,8 +109,8 @@ func (mux *ServeMux) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mux.core.ServeHTTP(w, r)
 }
 
-// Config is the configuration for the underlying httprouter.Router.
-type Config struct {
+// MuxConfig is the configuration for the underlying httprouter.Router.
+type MuxConfig struct {
 	// Enables automatic redirection if the current route can't be matched but a
 	// handler for the path with (without) the trailing slash exists.
 	// For example if /foo/ is requested but a route only exists for /foo, the
@@ -171,22 +171,22 @@ type Config struct {
 	LastResortErrorHandler LastResortErrorHandler
 }
 
-// Option is an option for customizing the ServeMux.
-type Option func(mux *ServeMux)
+// MuxOption is an option for customizing the ServeMux.
+type MuxOption func(mux *ServeMux)
 
 // applyTo applies the option to the ServeMux.
-func (f Option) applyTo(mux *ServeMux) { f(mux) }
+func (f MuxOption) applyTo(mux *ServeMux) { f(mux) }
 
-// optionNamespace is an internal type for grouping options.
-type optionNamespace int
+// muxOptionNamespace is an internal type for grouping options.
+type muxOptionNamespace int
 
 // Opts is a namespace for accessing options.
-const Opts optionNamespace = 0
+const Opts muxOptionNamespace = 0
 
 // Default configures the ServeMux with default options.
-func (optionNamespace) Default() Option {
+func (muxOptionNamespace) Default() MuxOption {
 	return func(mux *ServeMux) {
-		defaults := make([]Option, 0, 5) // at most 5 default options.
+		defaults := make([]MuxOption, 0, 5) // at most 5 default options.
 		if mux.conf.LastResortErrorHandler == nil {
 			defaults = append(defaults, Opts.LastResortErrorHandler(DefaultHandler.LastResortError))
 		}
@@ -218,7 +218,7 @@ func (optionNamespace) Default() Option {
 // handler for the path with (without) the trailing slash exists. Default enabled.
 //
 // see: https://godoc.org/github.com/julienschmidt/httprouter#Router.RedirectTrailingSlash
-func (optionNamespace) RedirectTrailingSlash(enabled bool) Option {
+func (muxOptionNamespace) RedirectTrailingSlash(enabled bool) MuxOption {
 	return func(mux *ServeMux) { mux.conf.RedirectTrailingSlash = enabled }
 }
 
@@ -226,7 +226,7 @@ func (optionNamespace) RedirectTrailingSlash(enabled bool) Option {
 // handle is registered for it. Default enabled.
 //
 // see: https://godoc.org/github.com/julienschmidt/httprouter#Router.RedirectFixedPath
-func (optionNamespace) RedirectFixedPath(enabled bool) Option {
+func (muxOptionNamespace) RedirectFixedPath(enabled bool) MuxOption {
 	return func(mux *ServeMux) { mux.conf.RedirectFixedPath = enabled }
 }
 
@@ -234,7 +234,7 @@ func (optionNamespace) RedirectFixedPath(enabled bool) Option {
 // current route, if the current request can not be routed. Default enabled.
 //
 // see: https://godoc.org/github.com/julienschmidt/httprouter#Router.HandleMethodNotAllowed
-func (optionNamespace) HandleMethodNotAllowed(enabled bool) Option {
+func (muxOptionNamespace) HandleMethodNotAllowed(enabled bool) MuxOption {
 	return func(mux *ServeMux) { mux.conf.HandleMethodNotAllowed = enabled }
 }
 
@@ -242,7 +242,7 @@ func (optionNamespace) HandleMethodNotAllowed(enabled bool) Option {
 // Custom OPTIONS handlers take priority over automatic replies. Default enabled.
 //
 // see: https://godoc.org/github.com/julienschmidt/httprouter#Router.HandleOPTIONS
-func (optionNamespace) HandleOption(enabled bool) Option {
+func (muxOptionNamespace) HandleOption(enabled bool) MuxOption {
 	return func(mux *ServeMux) { mux.conf.HandleOPTIONS = enabled }
 }
 
@@ -250,39 +250,39 @@ func (optionNamespace) HandleOption(enabled bool) Option {
 // The handler is only called if HandleOPTIONS is true and no OPTIONS handler for the specific path was set.
 //
 // see: https://godoc.org/github.com/julienschmidt/httprouter#Router.GlobalOPTIONS
-func (optionNamespace) GlobalOptionHandler(handler http.Handler) Option {
+func (muxOptionNamespace) GlobalOptionHandler(handler http.Handler) MuxOption {
 	return func(mux *ServeMux) { mux.conf.GlobalOPTIONS = handler }
 }
 
 // NotFoundHandler sets the handler that is called when no matching route is found.
 // If it is not set, DefaultHandler.NotFound is used.
-func (optionNamespace) NotFoundHandler(handler http.Handler) Option {
+func (muxOptionNamespace) NotFoundHandler(handler http.Handler) MuxOption {
 	return func(mux *ServeMux) { mux.conf.NotFound = handler }
 }
 
 // MethodNotAllowedHandler sets the handler that is called when a request
 // cannot be routed and HandleMethodNotAllowed is true. If it is not set, DefaultHandler.MethodNotAllowed is used.
-func (optionNamespace) MethodNotAllowedHandler(handler http.Handler) Option {
+func (muxOptionNamespace) MethodNotAllowedHandler(handler http.Handler) MuxOption {
 	return func(mux *ServeMux) { mux.conf.MethodNotAllowed = handler }
 }
 
 // PanicHandler sets the handler that is called when a panic occurs.
 // If no handler is set, the DefaultHandler.LastResortError is used.
-func (optionNamespace) PanicHandler(handler func(http.ResponseWriter, *http.Request, any)) Option {
+func (muxOptionNamespace) PanicHandler(handler func(http.ResponseWriter, *http.Request, any)) MuxOption {
 	return func(mux *ServeMux) { mux.conf.PanicHandler = handler }
 }
 
 // LastResortErrorHandler sets the handler that is called if after all middlewares,
 // there is still an error occurs.
 // This handler is used to catch errors that are not handled by the middlewares.
-func (optionNamespace) LastResortErrorHandler(handler LastResortErrorHandler) Option {
+func (muxOptionNamespace) LastResortErrorHandler(handler LastResortErrorHandler) MuxOption {
 	return func(mux *ServeMux) { mux.conf.LastResortErrorHandler = handler }
 }
 
 // Middleware sets the middleware for all routes in the ServeMux.
 // This middleware is called before the request is received by the Route Handler, that means if route has specific
 // middleware, it will be called after this middleware. In other words, this middleware is the outermost middleware.
-func (optionNamespace) Middleware(m MuxMiddleware) Option {
+func (muxOptionNamespace) Middleware(m MuxMiddleware) MuxOption {
 	return func(mux *ServeMux) { mux.midl = m }
 }
 

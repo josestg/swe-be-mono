@@ -24,6 +24,8 @@ CURRENT_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 # BUILD_VERSION is the git tag of the current commit.
 BUILD_VERSION := $(shell git describe --tags --always --match "[0-9][0-9][0-9][0-9].*.*")
 
+# The default target is to prepare the development environment.
+all: tools setup-pre-commit
 
 .PHONY: build
 build: $(CMD_SET) # build all binaries in CMD_SET.
@@ -50,3 +52,17 @@ bin/%: $(shell find . -type f -name '*.go') # ensure to rebuild if any go file c
 			-X main.buildTime=$(CURRENT_TIME) \
 			-X main.buildVersion=$(BUILD_VERSION)" \
 		-o $@ ./cmd/$(@F)
+
+
+# Install all development tools, these tools are used by pre-commit hook.
+tools: hack/install_tools.sh
+	@echo "Installing tools"
+	@hack/install_tools.sh
+	@echo "Tools installed"
+
+
+# Enable pre-commit hook.
+setup-pre-commit:
+	@echo "Setting up pre-commit hook"
+	@cp -f hack/pre-commit.sh .git/hooks/pre-commit
+	@chmod +x .git/hooks/pre-commit

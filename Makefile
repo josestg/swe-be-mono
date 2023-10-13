@@ -89,11 +89,12 @@ images: $(addprefix docker-image/, $(CMD_SET))
 	@echo "All images built."
 
 # Build docker image.
+QUITE ?= false
 docker-image/%:
 	@echo "Building docker image: $(@F), please wait..."
 	@docker build \
 		-f cmd/admin-restful/Dockerfile \
-		-q \
+		-q=$(QUITE) \
 		-t josestg/swe-be-mono-$(@F):$(BUILD_VERSION) \
 		--build-arg BUILD_VERSION=$(BUILD_VERSION) \
 		--build-arg BUILD_DATE=$(CURRENT_TIME) \

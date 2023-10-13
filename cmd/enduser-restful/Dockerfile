@@ -1,5 +1,5 @@
 # Build the Go Binary.
-FROM golang:1.20 AS builder
+FROM golang:1.21.3 AS builder
 
 ARG GITHUB_TOKEN
 ENV GOOS linux

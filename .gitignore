@@ -21,6 +21,10 @@ bin/
 # Go workspace file
 go.work
 
+# Mock files
+mock*
+**/gomock_reflect_*/**
+
 
 # Editor
 .idea

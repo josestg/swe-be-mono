@@ -6,6 +6,7 @@ import (
 
 	"github.com/josestg/swe-be-mono/internal/app"
 	"github.com/josestg/swe-be-mono/internal/app/enduserrestful"
+	"github.com/josestg/swe-be-mono/internal/config"
 )
 
 // These variables are set by the build process.
@@ -20,13 +21,14 @@ func main() {
 	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{}))
 	slog.SetDefault(log)
 
-	info, err := app.NewInfo(buildName, buildTime, buildVersion)
+	cfg, err := config.New(buildName, buildTime, buildVersion)
 	if err != nil {
-		log.Warn("failed to create app info", "error", err)
+		log.Error("failed to create app info", "error", err)
+		os.Exit(1)
 	}
 
-	if err := enduserrestful.Run(log, info); err != nil {
-		log.Error("run failed", "error", err)
+	if err := app.Run(log, cfg, enduserrestful.AppFactory); err != nil {
+		log.Error("app run failed", "error", err)
 		os.Exit(1)
 	}
 }

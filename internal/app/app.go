@@ -1,40 +1,21 @@
 package app
 
 import (
-	"fmt"
-	"time"
+	"log/slog"
+	"net/http"
 )
 
-// Info describes the basic information of the application.
-type Info struct {
-	// Name is the name of the application.
-	Name string
-	// BuildTime is the time when the application was built.
-	BuildTime string
-	// BuildVersion is the version of the application when it was built.
-	// If tag is not available, it will be the commit hash.
-	BuildVersion string
+// App is contract for API application that can be run in application runtime.
+type App interface {
+	// APIHandler returns the handler for the Applications APIs.
+	APIHandler() http.Handler
+
+	// DocHandler returns the handler for the Applications Documentation.
+	DocHandler() http.Handler
 }
 
-// NewInfo creates a new Info and validates the build time.
-func NewInfo(name, buildTime, buildVersion string) (Info, error) {
-	buildAt, err := time.Parse(time.RFC3339, buildTime)
-	if err != nil {
-		return Info{}, fmt.Errorf("invalid build time: %w", err)
-	}
+// Factory is a function that creates an instance of the application.
+type Factory func(log *slog.Logger) App
 
-	buildTime = buildAt.In(time.Local).String()
-
-	info := Info{
-		Name:         name,
-		BuildTime:    buildTime,
-		BuildVersion: buildVersion,
-	}
-
-	return info, nil
-}
-
-// String returns the string representation of the App Info.
-func (i Info) String() string {
-	return fmt.Sprintf("%s:%s (%s)", i.Name, i.BuildVersion, i.BuildTime)
-}
+// New is a syntactic sugar for applying the factory.
+func (f Factory) New(log *slog.Logger) App { return f(log) }

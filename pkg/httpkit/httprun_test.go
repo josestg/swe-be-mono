@@ -139,6 +139,14 @@ func TestGracefulRunner_ListenAndServeShutdownForcefullyButFailed(t *testing.T) 
 	expectTrue(t, tracer.has(closeVisited))
 }
 
+func TestRunEvent_String(t *testing.T) {
+	expectTrue(t, RunEventSignal.String() == "signal received")
+	expectTrue(t, RunEventInfo.String() == "info")
+	expectTrue(t, RunEventError.String() == "error occurred")
+	expectTrue(t, RunEventAddr.String() == "listening on address")
+	expectTrue(t, RunEvent(255).String() == "unknown")
+}
+
 type serverMock struct {
 	ListenAndServeFunc func() error
 	ShutdownFunc       func(ctx context.Context) error

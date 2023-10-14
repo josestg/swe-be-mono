@@ -55,7 +55,14 @@ func listenAndServe(log *slog.Logger, cfg httpkit.RunConfig, mux http.Handler) e
 		httpkit.RunOpts.WaitTimeout(cfg.ShutdownTimeout),
 		httpkit.RunOpts.Signals(syscall.SIGINT, syscall.SIGTERM),
 		httpkit.RunOpts.EventListener(func(evt httpkit.RunEvent, data string) {
-			log.Info("http graceful runtime", "event", evt, "data", data)
+			switch evt {
+			default:
+				log.Info(data)
+			case httpkit.RunEventAddr:
+				log.Info("http server listening", "addr", data)
+			case httpkit.RunEventSignal:
+				log.Info("http server received shutdown signal", "signal", data)
+			}
 		}),
 	)
 

@@ -49,6 +49,22 @@ const (
 	RunEventSignal                 // for telling the data is a signal received.
 )
 
+// String returns the string representation of RunEvent for logging readability.
+func (e RunEvent) String() string {
+	switch e {
+	case RunEventInfo:
+		return "info"
+	case RunEventAddr:
+		return "listening on address"
+	case RunEventError:
+		return "error occurred"
+	case RunEventSignal:
+		return "signal received"
+	default:
+		return "unknown"
+	}
+}
+
 // GracefulRunner is a wrapper of http.Server that can be shutdown gracefully.
 type GracefulRunner struct {
 	Runner
@@ -86,9 +102,10 @@ func NewGracefulRunner(server Runner, opts ...RunOption) *GracefulRunner {
 
 // ListenAndServe starts listening and serving the server gracefully.
 func (s *GracefulRunner) ListenAndServe() error {
-	s.eventListener(RunEventInfo, "server is listening")
 	if std, ok := s.Runner.(*http.Server); ok {
 		s.eventListener(RunEventAddr, std.Addr)
+	} else {
+		s.eventListener(RunEventInfo, "server is listening")
 	}
 
 	serverErr := make(chan error, 1)
@@ -99,7 +116,6 @@ func (s *GracefulRunner) ListenAndServe() error {
 		// if shutdown succeeded, http.ErrServerClosed will be returned.
 		if errors.Is(err, http.ErrServerClosed) {
 			shutdownCompleted <- struct{}{}
-			s.eventListener(RunEventInfo, "graceful shutdown completed")
 		} else {
 			// only send error if it's not http.ErrServerClosed.
 			serverErr <- err

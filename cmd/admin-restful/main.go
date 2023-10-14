@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/josestg/swe-be-mono/internal/app"
@@ -17,14 +17,16 @@ var (
 )
 
 func main() {
-	info := app.Info{
-		Name:         buildName,
-		BuildTime:    buildTime,
-		BuildVersion: buildVersion,
+	log := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{}))
+	slog.SetDefault(log)
+
+	info, err := app.NewInfo(buildName, buildTime, buildVersion)
+	if err != nil {
+		log.Warn("failed to create app info", "error", err)
 	}
 
-	if err := adminrestful.Run(info); err != nil {
-		_, _ = fmt.Fprintf(os.Stderr, "[%s]: run failed, got error: %v\n", info.Name, err)
+	if err := adminrestful.Run(log, info); err != nil {
+		log.Error("run failed", "error", err)
 		os.Exit(1)
 	}
 }

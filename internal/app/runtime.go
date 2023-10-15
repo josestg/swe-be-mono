@@ -32,14 +32,18 @@ func newRouter(cfg *config.Config, factory Factory) http.Handler {
 	// dynamically get the path prefix for the application.
 	prefix := app.BasePath()
 
+	// mid is a root level middleware for the application.
+	mid := httpkit.ReduceNetMiddleware(
+		httpmiddleware.CORS(cfg.HttpCORS),
+		httpkit.LogEntryRecorder,
+	)
+
 	// mux in here is a root mux for splitting the traffic to different handlers based on the path prefix.
 	mux := http.NewServeMux()
 	mux.Handle(prefix+"/docs/", app.DocHandler())
-	mux.Handle(prefix+"/api/v1/", http.StripPrefix(prefix, app.APIHandler()))
-	mux.Handle(prefix+"/system/", http.StripPrefix(prefix, systemHandler(cfg.AppInfo)))
-
-	mid := httpkit.ReduceNetMiddleware(httpmiddleware.CORS(cfg.HttpCORS))
-	return mid.Then(mux)
+	mux.Handle(prefix+"/api/v1/", http.StripPrefix(prefix, mid.Then(app.APIHandler())))
+	mux.Handle(prefix+"/system/", http.StripPrefix(prefix, mid.Then(systemHandler(cfg.AppInfo))))
+	return mux
 }
 
 // systemHandler is a handler for serving system information and health checks.

@@ -1,7 +1,10 @@
 package enduserrestful
 
 import (
+	"log/slog"
 	"net/http"
+
+	"github.com/josestg/swe-be-mono/internal/httpmiddleware"
 
 	"github.com/josestg/swe-be-mono/internal/config"
 
@@ -15,12 +18,14 @@ const BasePath = "/swe-be-mono-endusers"
 // App is the enduser-restful application.
 type App struct {
 	cfg *config.Config
+	log *slog.Logger
 }
 
 // AppFactory is the factory for creating the enduser-restful application.
 func AppFactory(cfg *config.Config) app.App {
 	return &App{
 		cfg: cfg,
+		log: slog.Default(),
 	}
 }
 
@@ -32,7 +37,11 @@ func (a *App) BasePath() string { return BasePath }
 
 // APIHandler returns the handler for the enduser-restful APIs.
 func (a *App) APIHandler() http.Handler {
-	mux := httpkit.NewServeMux()
+	mid := httpkit.ReduceMuxMiddleware(
+		httpmiddleware.LogAndErrHandling(a.log.WithGroup("request")),
+	)
+
+	mux := httpkit.NewServeMux(httpkit.Opts.Middleware(mid))
 	return mux
 }
 

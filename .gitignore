@@ -26,5 +26,9 @@ mock*
 **/gomock_reflect_*/**
 
 
+# Swagger generated files
+**/swagger-docs/*_docs.go
+**/swagger-docs/*_swagger.json
+
 # Editor
 .idea

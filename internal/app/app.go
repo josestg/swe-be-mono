@@ -13,6 +13,9 @@ type App interface {
 
 	// DocHandler returns the handler for the Applications Documentation.
 	DocHandler() http.Handler
+
+	// BasePath returns the base path for the application.
+	BasePath() string
 }
 
 // Factory is a function that creates an instance of the application.

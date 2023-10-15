@@ -34,3 +34,10 @@ if ! command -v govulncheck > /dev/null; then
 else
     echo "govulncheck already installed"
 fi
+
+# install swag if not installed yet.
+if ! command -v swag > /dev/null; then
+  go install github.com/swaggo/swag/cmd/swag@latest
+else \
+  echo "swag already installed."
+fi

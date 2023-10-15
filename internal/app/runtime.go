@@ -27,11 +27,14 @@ func Run(log *slog.Logger, cfg *config.Config, factory Factory) error {
 func newRouter(cfg *config.Config, factory Factory) http.Handler {
 	app := factory.New(cfg)
 
+	// dynamically get the path prefix for the application.
+	prefix := app.BasePath()
+
 	// mux in here is a root mux for splitting the traffic to different handlers based on the path prefix.
 	mux := http.NewServeMux()
-	mux.Handle("/docs/", app.DocHandler())
-	mux.Handle("/api/v1/", app.APIHandler())
-	mux.Handle("/systems/", systemHandler(cfg.AppInfo))
+	mux.Handle(prefix+"/docs/", app.DocHandler())
+	mux.Handle(prefix+"/api/v1/", http.StripPrefix(prefix, app.APIHandler()))
+	mux.Handle(prefix+"/system/", http.StripPrefix(prefix, systemHandler(cfg.AppInfo)))
 	return mux
 }
 

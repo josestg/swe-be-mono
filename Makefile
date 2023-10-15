@@ -27,11 +27,14 @@ CURRENT_TIME := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 # BUILD_VERSION is the git tag of the current commit.
 BUILD_VERSION := $(shell git describe --tags --always --match "[0-9][0-9][0-9][0-9].*.*")
 
+# BUILD_TAGS is a list of build tags to be passed to the go build command.
+BUILD_TAGS 	  := "swagger_docs_enabled"
+
 # The default target is to prepare the development environment.
 all: tools setup-pre-commit
 
 .PHONY: build
-build: $(CMD_SET) # build all binaries in CMD_SET.
+build: swagger $(CMD_SET) # build all binaries in CMD_SET.
 	@echo "Build done. Binaries:"
 	@for bin in $(CMD_SET); do echo "  - $$bin"; done
 
@@ -64,6 +67,7 @@ bin/%: $(shell find . -type f -name '*.go') # ensure to rebuild if any go file c
 	@mkdir -p $(dir $@) # create `bin` directory if not exist.
 	@go build \
 		-race=$(CGO_ENABLED) \
+		-tags=$(BUILD_TAGS) \
 		-ldflags "\
 			-X main.buildName=$(@F) \
 			-X main.buildTime=$(CURRENT_TIME) \
@@ -103,3 +107,31 @@ docker-image/%:
 		--build-arg CACHEBUST=$(shell date +%s) \
 		. ;
 	@echo "Docker image built: josestg/swe-be-mono-$(@F):$(BUILD_VERSION)"
+
+
+# Swagger related targets.
+swagger:
+	@make swagger-gen/admin-restful \
+		SW_TAGS="Admin,System" \
+		SW_INSTANCE_NAME="admin"
+	@make swagger-gen/enduser-restful \
+		SW_TAGS="Enduser,System" \
+		SW_INSTANCE_NAME="enduser"
+
+SW_TAGS ?= "System"
+SW_INSTANCE_NAME ?= "swagger"
+swagger-gen/%:
+	@if [[ $(BUILD_TAGS) == *"swagger_docs_enabled"* ]]; then \
+  		printf "[tags=\"$(SW_TAGS)\" instance=\"$(SW_INSTANCE_NAME)\"] Generating swagger docs for $(@F) ...\n" && \
+		swag init \
+				--generalInfo cmd/$(@F)/main*_with_swagger.go \
+				--output cmd/$(@F)/swagger-docs \
+				--parseDependency \
+				--overridesFile .swaggo \
+			  	--instanceName $(SW_INSTANCE_NAME) \
+				--tags $(SW_TAGS) \
+				--outputTypes go,json \
+				-q; \
+	else \
+		echo "swagger_docs_enabled tags not set; skipping swagger docs generation."; \
+	fi

@@ -3,11 +3,13 @@ package adminrestful
 import (
 	"net/http"
 
-	"github.com/josestg/swe-be-mono/internal/config"
-
 	"github.com/josestg/swe-be-mono/internal/app"
+	"github.com/josestg/swe-be-mono/internal/config"
 	"github.com/josestg/swe-be-mono/pkg/httpkit"
 )
+
+// BasePath is the base path for the admin-restful application.
+const BasePath = "/swe-be-mono-admins"
 
 // App is the admin-restful application.
 type App struct {
@@ -23,6 +25,9 @@ func AppFactory(cfg *config.Config) app.App {
 
 // DocHandler returns the handler for the admin-restful documentation.
 func (a *App) DocHandler() http.Handler { return _docHandler }
+
+// BasePath returns the base path for the application.
+func (a *App) BasePath() string { return BasePath }
 
 // APIHandler returns the handler for the admin-restful APIs.
 func (a *App) APIHandler() http.Handler {

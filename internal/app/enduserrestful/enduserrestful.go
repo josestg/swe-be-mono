@@ -9,6 +9,9 @@ import (
 	"github.com/josestg/swe-be-mono/pkg/httpkit"
 )
 
+// BasePath is the base path for the enduser-restful application.
+const BasePath = "/swe-be-mono-endusers"
+
 // App is the enduser-restful application.
 type App struct {
 	cfg *config.Config
@@ -23,6 +26,9 @@ func AppFactory(cfg *config.Config) app.App {
 
 // DocHandler returns the handler for the enduser-restful documentation.
 func (a *App) DocHandler() http.Handler { return _docHandler }
+
+// BasePath returns the base path for the application.
+func (a *App) BasePath() string { return BasePath }
 
 // APIHandler returns the handler for the enduser-restful APIs.
 func (a *App) APIHandler() http.Handler {

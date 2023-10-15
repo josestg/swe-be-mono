@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  swe_be_mono_postgres:
+    image: postgres:latest
+    container_name: swe_be_mono_postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: swe_be_mono
+      POSTGRES_PASSWORD: swe_be_mono
+      POSTGRES_DB: swe_be_mono
+    networks:
+      - swe_be_mono_network
+
+networks:
+  swe_be_mono_network:
+    driver: bridge

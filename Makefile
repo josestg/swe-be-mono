@@ -135,3 +135,38 @@ swagger-gen/%:
 	else \
 		echo "swagger_docs_enabled tags not set; skipping swagger docs generation."; \
 	fi
+
+
+# ---- Docker ----
+infra-up:
+	docker compose -f docker-compose.yaml up -d
+
+infra-down:
+	docker compose -f docker-compose.yaml down
+
+
+# ---- Database Migration ----
+MIGRATION_DRIVER ?= postgre
+ifeq ($(MIGRATION_DRIVER),postgre)
+	db_migration_dsn := postgres://${DB_POSTGRE_USER}:${DB_POSTGRE_PASSWORD}@${DB_POSTGRE_HOST}:${DB_POSTGRE_PORT}/${DB_POSTGRE_DATABASE}?${DB_POSTGRE_CONN_QUERY}
+	db_migration_dir := resources/migrations/postgre
+endif
+define exec_dbmate
+	dbmate -d "${db_migration_dir}" -u "${db_migration_dsn}" $(1) $(2)
+endef
+
+.PHONY: db-new
+db-new: # create database.
+	@$(call exec_dbmate,new,$(name))
+
+.PHONY: db-status
+db-status: # show database migration status.
+	@$(call exec_dbmate,status)
+
+.PHONY: db-migrate
+db-migrate: # run database migration.
+	@$(call exec_dbmate,migrate)
+
+.PHONY: db-rollback
+db-rollback: # rollback database migration.
+	@$(call exec_dbmate,rollback)

@@ -41,3 +41,11 @@ if ! command -v swag > /dev/null; then
 else \
   echo "swag already installed."
 fi
+
+# install dbmate if not installed yet.
+if ! command -v dbmate > /dev/null; then
+  echo "Installing dbmate"
+  go install github.com/amacneil/dbmate@latest
+else \
+    echo "dbmate already installed"
+fi

@@ -18,14 +18,14 @@ func Run(log *slog.Logger, cfg *config.Config, factory Factory) error {
 	log.Info("app started", "app", cfg.AppInfo)
 	defer log.Info("app stopped", "app", cfg.AppInfo)
 
-	router := newRouter(log, cfg, factory)
+	router := newRouter(cfg, factory)
 	return listenAndServe(log, cfg.HttpServer, router)
 }
 
 // newRouter returns the complete http.Handler for the application.
 // Including the Application APIs, Documentation and System APIs.
-func newRouter(log *slog.Logger, cfg *config.Config, factory Factory) http.Handler {
-	app := factory.New(log)
+func newRouter(cfg *config.Config, factory Factory) http.Handler {
+	app := factory.New(cfg)
 
 	// mux in here is a root mux for splitting the traffic to different handlers based on the path prefix.
 	mux := http.NewServeMux()

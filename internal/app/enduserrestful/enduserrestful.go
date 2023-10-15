@@ -1,8 +1,9 @@
 package enduserrestful
 
 import (
-	"log/slog"
 	"net/http"
+
+	"github.com/josestg/swe-be-mono/internal/config"
 
 	"github.com/josestg/swe-be-mono/internal/app"
 	"github.com/josestg/swe-be-mono/pkg/httpkit"
@@ -10,13 +11,13 @@ import (
 
 // App is the enduser-restful application.
 type App struct {
-	log *slog.Logger
+	cfg *config.Config
 }
 
 // AppFactory is the factory for creating the enduser-restful application.
-func AppFactory(log *slog.Logger) app.App {
+func AppFactory(cfg *config.Config) app.App {
 	return &App{
-		log: log,
+		cfg: cfg,
 	}
 }
 

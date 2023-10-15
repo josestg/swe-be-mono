@@ -1,8 +1,9 @@
 package app
 
 import (
-	"log/slog"
 	"net/http"
+
+	"github.com/josestg/swe-be-mono/internal/config"
 )
 
 // App is contract for API application that can be run in application runtime.
@@ -15,7 +16,7 @@ type App interface {
 }
 
 // Factory is a function that creates an instance of the application.
-type Factory func(log *slog.Logger) App
+type Factory func(cfg *config.Config) App
 
 // New is a syntactic sugar for applying the factory.
-func (f Factory) New(log *slog.Logger) App { return f(log) }
+func (f Factory) New(cfg *config.Config) App { return f(cfg) }

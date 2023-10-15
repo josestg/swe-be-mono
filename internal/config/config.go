@@ -7,11 +7,13 @@ import (
 
 	"github.com/josestg/swe-be-mono/pkg/env"
 	"github.com/josestg/swe-be-mono/pkg/httpkit"
+	"github.com/rs/cors"
 )
 
 // Config is a central configuration for the application.
 type Config struct {
 	AppInfo    AppInfo
+	HttpCORS   cors.Options
 	HttpServer httpkit.RunConfig
 }
 
@@ -29,6 +31,15 @@ func New(appName, buildTime, buildVersion string) (*Config, error) {
 			ShutdownTimeout:     env.Duration("HTTP_SERVER_SHUTDOWN_TIMEOUT", 5*time.Second),
 			RequestReadTimeout:  env.Duration("HTTP_SERVER_REQUEST_READ_TIMEOUT", 5*time.Second),
 			RequestWriteTimeout: env.Duration("HTTP_SERVER_REQUEST_WRITE_TIMEOUT", 10*time.Second),
+		},
+		HttpCORS: cors.Options{
+			AllowedOrigins:     env.StringList("HTTP_CORS_ALLOWED_ORIGINS", []string{"*"}),
+			AllowedMethods:     env.StringList("HTTP_CORS_ALLOWED_METHODS", []string{"GET", "POST", "PUT", "DELETE", "PATCH"}),
+			AllowedHeaders:     env.StringList("HTTP_CORS_ALLOWED_HEADERS", []string{"*"}),
+			AllowCredentials:   env.Bool("HTTP_CORS_ALLOW_CREDENTIALS", false),
+			MaxAge:             env.Int("HTTP_CORS_MAX_AGE", 0),
+			OptionsPassthrough: env.Bool("HTTP_CORS_OPTIONS_PASSTHROUGH", false),
+			Debug:              env.Bool("HTTP_CORS_DEBUG", false),
 		},
 	}
 

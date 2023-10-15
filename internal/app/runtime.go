@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"syscall"
 
+	"github.com/josestg/swe-be-mono/internal/httpmiddleware"
+
 	"github.com/josestg/swe-be-mono/internal/config"
 
 	"github.com/josestg/swe-be-mono/internal/httphandler"
@@ -35,7 +37,9 @@ func newRouter(cfg *config.Config, factory Factory) http.Handler {
 	mux.Handle(prefix+"/docs/", app.DocHandler())
 	mux.Handle(prefix+"/api/v1/", http.StripPrefix(prefix, app.APIHandler()))
 	mux.Handle(prefix+"/system/", http.StripPrefix(prefix, systemHandler(cfg.AppInfo)))
-	return mux
+
+	mid := httpkit.ReduceNetMiddleware(httpmiddleware.CORS(cfg.HttpCORS))
+	return mid.Then(mux)
 }
 
 // systemHandler is a handler for serving system information and health checks.

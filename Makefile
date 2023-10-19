@@ -34,7 +34,7 @@ BUILD_TAGS 	  := "swagger_docs_enabled"
 all: tools setup-pre-commit
 
 .PHONY: build
-build: swagger $(CMD_SET) # build all binaries in CMD_SET.
+build: $(CMD_SET) # build all binaries in CMD_SET.
 	@echo "Build done. Binaries:"
 	@for bin in $(CMD_SET); do echo "  - $$bin"; done
 
